@@ -1,4 +1,5 @@
-export default function Index() {
+import { MantineProvider, Button } from "@mantine/core";
+function Index() {
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.4" }}>
       <h1>Welcome to Remix</h1>
@@ -27,6 +28,14 @@ export default function Index() {
           </a>
         </li>
       </ul>
+      <Button>Mantine works</Button>
     </div>
+  );
+}
+export default function WithProvider() {
+  return (
+    <MantineProvider theme={{ colorScheme: "dark" }}>
+      <Index />
+    </MantineProvider>
   );
 }
