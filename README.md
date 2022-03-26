@@ -51,3 +51,21 @@ rm -rf app
 # copy your app over
 cp -R ../my-old-remix-app/app app
 ```
+
+Connect Database
+
+```bash
+  DATABASE_URL="postgresql://postgres:<PASSWORD>@<DATABASE>supabase.co:5432/postgres"
+```
+
+Pull Database
+
+- npx prisma db pull
+
+Generate Schema
+
+- npx prisma generate
+
+Seed
+
+- node --require esbuild-register prisma/seed.ts
