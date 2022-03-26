@@ -9,18 +9,19 @@ async function seed() {
   //   name: faker.company.companyName(),
   // };
 
-  const createExpense = (vendpr:String): Prisma.expensesCreateInput => {
-    const companyName = faker.company.companyName();
+  const createExpense = (
+    vendor: string = faker.company.companyName()
+  ): Prisma.expensesCreateInput => {
     return {
       name: faker.commerce.productName(),
       amount_cents: chance.integer({ min: 100, max: 10000 }),
       vendors: {
         connectOrCreate: {
           where: {
-            name: companyName,
+            name: vendor,
           },
           create: {
-            name: companyName,
+            name: vendor,
           },
         },
       },
