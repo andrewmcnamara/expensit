@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, vendors } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { Chance } from "chance";
 const db = new PrismaClient();
 const chance = new Chance();
@@ -15,6 +15,7 @@ async function seed() {
     return {
       name: faker.commerce.productName(),
       amount_cents: chance.integer({ min: 100, max: 10000 }),
+      created_at: chance.date({ string: false, year: 2020 }),
       vendors: {
         connectOrCreate: {
           where: {
@@ -29,8 +30,12 @@ async function seed() {
   };
 
   await Promise.all(
-    [...Array(10)].map((idx) => {
-      return db.expenses.create({ data: createExpense() });
+    [...Array(10)].flatMap((idx) => {
+      const vendor = faker.company.companyName();
+
+      return [...Array(10)].map((idx) => {
+        return db.expenses.create({ data: createExpense(vendor) });
+      });
     })
   );
 }
