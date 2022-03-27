@@ -15,12 +15,21 @@ model vendors {
 }
 
 model expenses {
-  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  created_at   DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  id           String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at   DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?   @default(now()) @db.Timestamptz(6)
   description  String?
-  vendor_id    String?   @db.Uuid
-  name         String    @db.VarChar
+  vendor_id    String?     @db.Uuid
+  name         String      @db.VarChar
   amount_cents BigInt?
-  vendors      vendors?  @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  category_id  String?     @db.Uuid
+  categories   categories? @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendors      vendors?    @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model categories {
+  id         String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at DateTime?  @default(now()) @db.Timestamptz(6)
+  name       String?    @unique @db.VarChar
+  expenses   expenses[]
 }

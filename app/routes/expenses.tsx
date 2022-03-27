@@ -1,26 +1,52 @@
 import {
   ActionIcon,
+  Badge,
+  Button,
+  Card,
   ColorScheme,
   ColorSchemeProvider,
   Container,
+  Drawer,
+  Group,
+  Image,
   MantineProvider,
   Paper,
   Space,
   Table,
+  Text,
   Title,
+  useMantineTheme,
 } from "@mantine/core";
 import { useState } from "react";
 import type { LinksFunction, LoaderFunction } from "remix";
 import { json, Link, Outlet, useLoaderData } from "remix";
-import { MoonStars, Sun } from "tabler-icons-react";
+import {
+  Abacus,
+  Bus,
+  MoonStars,
+  Music,
+  Pizza,
+  Power,
+  QuestionMark,
+  Shirt,
+  ShoppingCart,
+  Sun,
+  Umbrella,
+} from "tabler-icons-react";
 import { db } from "~/utils/db.server.";
+import { Prisma } from "@prisma/client";
 
 type LoaderData = {
   expenses: Array<{
     id: string;
     name: string;
+    descrption?: string | null;
     amount_cents?: BigInt | null;
     created_at?: Date | null;
+    categories?: {
+      id: string;
+      name: string | null;
+    } | null;
     vendors: {
       id: string;
       name: string;
@@ -31,7 +57,7 @@ type LoaderData = {
 export const loader: LoaderFunction = async () => {
   const data: LoaderData = {
     expenses: await db.expenses.findMany({
-      include: { vendors: true },
+      include: { vendors: true, categories: true },
       orderBy: { created_at: "asc" },
     }),
   };
@@ -41,17 +67,90 @@ export const loader: LoaderFunction = async () => {
 
 function asDollars(amount: BigInt) {
   var num = Number(amount) / 100;
-  return num.toLocaleString("en-AU", { style: "currency", currency: "USD" });
+  return num.toLocaleString("en-AU", { style: "currency", currency: "AUD" });
 }
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "full",
-  timeStyle: "long",
+  dateStyle: "short",
+  timeStyle: "short",
 });
+
+const categoryIcons = {
+  Transport: Bus,
+  Food: Pizza,
+  Entertainment: Music,
+  Shopping: ShoppingCart,
+  Utilities: Power,
+  Other: QuestionMark,
+  Insurance: Umbrella,
+  Clothing: Shirt,
+};
+
+function ExpenseRow(expense: {
+  id: string;
+  name: string;
+  description: string | null;
+  amount_cents?: BigInt | null;
+  created_at?: Date | null;
+  categories?: { id: string; name: string | null } | null;
+  vendors: { id: string; name: string } | null;
+}) {
+  const [opened, setOpened] = useState(false);
+  const theme = useMantineTheme();
+
+  const secondaryColor =
+    theme.colorScheme === "dark" ? theme.colors.dark[1] : theme.colors.gray[7];
+  const CategoryIcon = categoryIcons[expense.categories?.name || "Other"];
+  return (
+    <>
+      <Drawer
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title="Expense details"
+        padding="xl"
+        size="md"
+        position="right"
+      >
+        <Card shadow="sm" p="xl">
+          <Card.Section>
+            <Group position="left" style={{ marginTop: 5 }}>
+              <CategoryIcon />
+              <Text weight={500}>{expense.name}</Text>
+            </Group>
+          </Card.Section>
+          <Space h="lg" />
+          <Text size="md" style={{ color: secondaryColor, lineHeight: 1.5 }}>
+            {expense?.description}
+          </Text>
+        </Card>
+      </Drawer>
+      <td> {expense.name}</td>
+      <td>{expense.amount_cents && asDollars(expense.amount_cents)}</td>
+      <td>{expense.vendors?.name} </td>
+      <td>
+        {/* {console.log({ date: expense.created_at })} */}
+        {/* {dateFormat.format(new Date(expense.created_at))} */}
+        {expense.created_at}
+      </td>
+      <td>
+        <Abacus
+          size={22}
+          strokeWidth={2}
+          color={"#ab40bf"}
+          style={{ cursor: "hand" }}
+          onClick={() => setOpened(true)}
+        >
+          Open Drawer
+        </Abacus>
+      </td>
+    </>
+  );
+}
 
 function ExpensesRoute() {
   const data = useLoaderData<LoaderData>();
   console.log({ data });
+  const xx = data.expenses[0];
   // && dateFormat.format(expense.created_at)
   return (
     <Container size="md" px="xs">
@@ -69,14 +168,7 @@ function ExpensesRoute() {
         <tbody>
           {data.expenses.map((expense) => (
             <tr key={expense.id}>
-              <td> {expense.name}</td>
-              <td>{expense.amount_cents && asDollars(expense.amount_cents)}</td>
-              <td>{expense.vendors?.name} </td>
-              <td>
-                {console.log({ date: expense.created_at })}
-                {/* {dateFormat.format(new Date(expense.created_at))} */}
-                {expense.created_at}
-              </td>
+              <ExpenseRow {...expense} />
             </tr>
           ))}
         </tbody>
