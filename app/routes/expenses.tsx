@@ -1,7 +1,5 @@
 import {
   ActionIcon,
-  Badge,
-  Button,
   Card,
   ColorScheme,
   ColorSchemeProvider,
@@ -10,6 +8,7 @@ import {
   Group,
   Image,
   MantineProvider,
+  Modal,
   Paper,
   Space,
   Table,
@@ -86,7 +85,7 @@ const categoryIcons = {
   Clothing: Shirt,
 };
 
-function ExpenseRow(expense: {
+function ExpenseRowModal(expense: {
   id: string;
   name: string;
   description: string | null;
@@ -100,7 +99,73 @@ function ExpenseRow(expense: {
 
   const secondaryColor =
     theme.colorScheme === "dark" ? theme.colors.dark[1] : theme.colors.gray[7];
-  const CategoryIcon = categoryIcons[expense.categories?.name || "Other"];
+  const CategoryIcon =
+    categoryIcons[
+      (expense.categories?.name || "Other") as keyof typeof categoryIcons
+    ];
+  return (
+    <>
+      <Modal
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title="Expense details"
+        padding="xl"
+        size="md"
+      >
+        <Card shadow="sm" p="xl">
+          <Card.Section>
+            <Group position="left" style={{ marginTop: 5 }}>
+              <CategoryIcon />
+              <Text weight={500}>{expense.name}</Text>
+            </Group>
+          </Card.Section>
+          <Space h="lg" />
+          <Text size="md" style={{ color: secondaryColor, lineHeight: 1.5 }}>
+            {expense?.description}
+          </Text>
+        </Card>
+      </Modal>
+      <td> {expense.name}</td>
+      <td>{expense.amount_cents && asDollars(expense.amount_cents)}</td>
+      <td>{expense.vendors?.name} </td>
+      <td>
+        {/* {console.log({ date: expense.created_at })} */}
+        {/* {dateFormat.format(new Date(expense.created_at))} */}
+        {expense.created_at}
+      </td>
+      <td>
+        <Abacus
+          size={22}
+          strokeWidth={2}
+          color={"#ab40bf"}
+          style={{ cursor: "hand" }}
+          onClick={() => setOpened(true)}
+        >
+          Open Drawer
+        </Abacus>
+      </td>
+    </>
+  );
+}
+
+function ExpenseRowDrawer(expense: {
+  id: string;
+  name: string;
+  description: string | null;
+  amount_cents?: BigInt | null;
+  created_at?: Date | null;
+  categories?: { id: string; name: string | null } | null;
+  vendors: { id: string; name: string } | null;
+}) {
+  const [opened, setOpened] = useState(false);
+  const theme = useMantineTheme();
+
+  const secondaryColor =
+    theme.colorScheme === "dark" ? theme.colors.dark[1] : theme.colors.gray[7];
+  const CategoryIcon =
+    categoryIcons[
+      (expense.categories?.name || "Other") as keyof typeof categoryIcons
+    ];
   return (
     <>
       <Drawer
@@ -156,7 +221,13 @@ function ExpensesRoute() {
     <Container size="md" px="xs">
       <Title order={1}>Expenses</Title>
       <Space h="lg" />
-      <Table striped highlightOnHover>
+      <Table
+        striped
+        highlightOnHover
+        horizontalSpacing="sm"
+        verticalSpacing="md"
+        fontSize="sm"
+      >
         <thead>
           <tr>
             <th>Name</th>
@@ -168,7 +239,8 @@ function ExpensesRoute() {
         <tbody>
           {data.expenses.map((expense) => (
             <tr key={expense.id}>
-              <ExpenseRow {...expense} />
+              {/* <ExpenseRowDrawer {...expense} /> */}
+              <ExpenseRowModal {...expense} />
             </tr>
           ))}
         </tbody>
