@@ -13,11 +13,13 @@ import {
   Space,
   Table,
   Text,
+  Textarea,
+  TextInput,
   Title,
   useMantineTheme,
 } from "@mantine/core";
 import { useState } from "react";
-import type { LinksFunction, LoaderFunction } from "remix";
+import type { LinksFunction, LoaderFunction, ActionFunction } from "remix";
 import { json, Link, Outlet, useLoaderData } from "remix";
 import {
   Abacus,
@@ -35,22 +37,30 @@ import {
 import { db } from "~/utils/db.server.";
 import { Prisma } from "@prisma/client";
 
-type LoaderData = {
-  expenses: Array<{
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+  const project = await createProject(formData);
+  return redirect(`/projects/${project.id}`);
+};
+
+interface Expense {
+  id: string;
+  name: string;
+  description?: string | null;
+  amount_cents?: BigInt | null;
+  created_at?: Date | null;
+  categories?: {
+    id: string;
+    name: string | null;
+  } | null;
+  vendors: {
     id: string;
     name: string;
-    descrption?: string | null;
-    amount_cents?: BigInt | null;
-    created_at?: Date | null;
-    categories?: {
-      id: string;
-      name: string | null;
-    } | null;
-    vendors: {
-      id: string;
-      name: string;
-    } | null;
-  }>;
+  } | null;
+}
+
+type LoaderData = {
+  expenses: Array<Expense>;
 };
 
 export const loader: LoaderFunction = async () => {
@@ -85,15 +95,32 @@ const categoryIcons = {
   Clothing: Shirt,
 };
 
-function ExpenseRowModal(expense: {
-  id: string;
-  name: string;
-  description: string | null;
-  amount_cents?: BigInt | null;
-  created_at?: Date | null;
-  categories?: { id: string; name: string | null } | null;
-  vendors: { id: string; name: string } | null;
-}) {
+const Title: React.FunctionComponent<{ expense: Expense }> = ({ expense }) => {
+  return <></>;
+};
+
+function ExpenseForm({ expense }: { expense: Expense }) {
+  return (
+    <form>
+      <TextInput label="Name" value={expense.name} />
+      <TextInput label="Vendor" value={expense.vendors?.name} />
+      <TextInput label="Amount" value={expense.amount_cents || ""} />
+      {/* <Select
+      label="Vendor"
+      data={data}
+      placeholder="Select items"
+      nothingFound="Nothing found"
+      searchable
+      creatable
+      getCreateLabel={(query) => `+ Create ${query}`}
+      onCreate={(query) => setData((current) => [...current, query])}
+    /> */}
+      <Textarea label="Description" value={expense.description || ""} />
+    </form>
+  );
+}
+
+function ExpenseRowModal(expense: Expense) {
   const [opened, setOpened] = useState(false);
   const theme = useMantineTheme();
 
@@ -112,6 +139,8 @@ function ExpenseRowModal(expense: {
         padding="xl"
         size="md"
       >
+        <Title expense={expense} />
+        <ExpenseForm expense={expense} />
         <Card shadow="sm" p="xl">
           <Card.Section>
             <Group position="left" style={{ marginTop: 5 }}>
